@@ -118,7 +118,6 @@ func main() {
 
 	// Create variables needed for the assignments
 	var assignments = make(map[string]string, len(delegates))
-	//important_countries := append(countries["P5"], countries["High"]...)
 	shuffled_contries := shuffle_slice(all_countries)
 
 	for i, delegate := range delegates {
