@@ -18,7 +18,7 @@ Source code can be found on [GitHub](https://github.com/PiquelChips/MunDelegateA
 ### Assigning
 
 - Right-click the folder containing the assigner and select `Open in Terminal`.
-- In the terminal, type `.\DelegateAssigner` and press enter.
+- In the terminal, type `.\DelegateAssigner.exe` and press enter.
 - Follow the instructions to enter the names of the chairs.
 - The assignments will be saved to `assignments.csv`. You can then import this file into `Google Sheets`, `Excel`, or any other spreadsheet software.
 - In most software you can import by selecting `file` then `import` or `import .csv` and then selecting the `delegates.csv` file.
