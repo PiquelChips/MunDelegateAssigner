@@ -1,7 +1,7 @@
 # MunDelegateAssigner
 
 Will randomly assign each delegate a country for an MUN debate. If you keep the `history.csv` file, delegates who have recently had an important country will have a lower chance of getting one again.
-Source code can be found on [GitHub](github.com/PiquelChips/MunDelegateAssigner).
+Source code can be found on [GitHub](https://github.com/PiquelChips/MunDelegateAssigner).
 
 ## TODO
 
