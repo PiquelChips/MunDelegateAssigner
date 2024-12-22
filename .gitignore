@@ -26,5 +26,6 @@ go.work.sum
 .env
 
 # ignore files with delegates and assignments to avoid leaking names
-assignments.txt
-delegates.txt
+assignments.csv
+delegates.csv
+history.csv
