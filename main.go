@@ -34,7 +34,9 @@ func main() {
 	remove_chairs(&delegates, delegates_file)
 	var assignments = make(map[string]string, len(delegates))
 
-	handle_weighted_delegate_assignments(&delegates, &previous_assignments, config_file, min_assignments, &important_countries, &available_countries, &assignments)
+	if previous_assignments != nil {
+		handle_weighted_delegate_assignments(&delegates, &previous_assignments, config_file, min_assignments, &important_countries, &available_countries, &assignments)
+	}
 
 	// assign the remaining delegates
 	for i, delegate := range delegates {
@@ -112,12 +114,14 @@ func write_assignments(filename string, assignments map[string]string) {
 func write_history(filename string, assignments map[string]string, previous_assignments map[string][]string) {
 
 	var history = make(map[string][]string)
-	for delegate, previous_countries := range previous_assignments {
-		var assigned_countries []string
-		for _, country := range previous_countries {
-			assigned_countries = append(assigned_countries, country)
+	if previous_assignments != nil {
+		for delegate, previous_countries := range previous_assignments {
+			var assigned_countries []string
+			for _, country := range previous_countries {
+				assigned_countries = append(assigned_countries, country)
+			}
+			history[delegate] = assigned_countries
 		}
-		history[delegate] = assigned_countries
 	}
 
 	for delegate, country := range assignments {
@@ -132,16 +136,6 @@ func write_history(filename string, assignments map[string]string, previous_assi
 			line += "," + country
 		}
 		lines = append(lines, line)
-	}
-
-	// remove old history file
-	if _, err := os.Stat(filename); err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			err := os.Remove(filename)
-			if err != nil {
-				panic(err)
-			}
-		}
 	}
 
 	file, error := os.Create(filename)
@@ -188,7 +182,9 @@ func get_important_countries() []string {
 
 func get_previous_assignments(filename string) (map[string][]string, int) {
 	file, err := os.Open(filename)
-	if err != nil {
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, 0
+	} else if err != nil {
 		panic(err)
 	}
 	defer file.Close()
