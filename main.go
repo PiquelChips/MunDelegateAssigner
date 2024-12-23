@@ -38,6 +38,22 @@ func main() {
 		handle_weighted_delegate_assignments(&delegates, &previous_assignments, config_file, min_assignments, &important_countries, &available_countries, &assignments)
 	}
 
+	if len(important_countries) > 0 {
+		for _, country := range important_countries {
+			i := slice_element_index(country, available_countries)
+			if i == -1 {
+				continue
+			}
+			delegate := delegates[0]
+			assignments[delegate] = country
+			important_countries = important_countries[1:]
+			// deleting the country and delegate from respective slice
+			delegates = delegates[1:]
+			available_countries[i] = available_countries[len(available_countries)-1]
+			available_countries = available_countries[:len(available_countries)-1]
+		}
+	}
+
 	// assign the remaining delegates
 	for i, delegate := range delegates {
 		if i >= len(available_countries) || i >= len(delegates) {
@@ -294,15 +310,17 @@ func handle_weighted_delegate_assignments(delegates *[]string, previous_assignme
 	})
 
 	// assign the weighted delegates
-	for i, country := range *important_countries {
-		if !in_slice(country, *available_countries) {
+	for i := range len(*important_countries) {
+		j := slice_element_index((*important_countries)[0], *available_countries)
+		if i == -1 {
 			continue
 		}
 		delegate := (*delegates)[0]
-		(*assignments)[delegate] = country
+		(*assignments)[delegate] = (*important_countries)[0]
+		*important_countries = (*important_countries)[1:]
 		// deleting the country and delegate from respective slice
 		(*delegates) = (*delegates)[1:]
-		(*available_countries)[i] = (*available_countries)[len(*available_countries)-1]
+		(*available_countries)[j] = (*available_countries)[len(*available_countries)-1]
 		(*available_countries) = (*available_countries)[:len(*available_countries)-1]
 	}
 }
