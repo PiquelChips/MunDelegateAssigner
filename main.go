@@ -224,7 +224,7 @@ func get_previous_assignments(filename string) (map[string][]string, int) {
 		}
 	}
 
-	return assignments, min_assignments + 1
+	return assignments, min_assignments + 2
 }
 
 func get_delegate_weight(previous_assignments []string, filename string, min_assignments int) int {
@@ -329,6 +329,9 @@ func remove_chairs(delegates *[]string, delegates_file string) {
 	fmt.Printf("Enter the name of the chairs as they are present in the %s file. Make sure they are separated by \",\" (no spaces): ", delegates_file)
 	var chair_string string
 	fmt.Scanf("%s", &chair_string)
+    if chair_string == "" {
+        return
+    }
 	chairs := strings.Split(chair_string, ",")
 	for _, chair := range chairs {
 		i := slice_element_index(chair, *delegates)
