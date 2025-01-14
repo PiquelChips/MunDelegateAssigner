@@ -5,7 +5,11 @@ Source code can be found on [GitHub](https://github.com/PiquelChips/MunDelegateA
 
 ## TODO
 
-- Remove need for country to have a value
+- Remove need for country to have a value in conf
+- Tag system for the delegate assigner:
+  - Works with the importance system
+  - On shuffle, ask for tags of debate topic
+  - If a country has a tag, assign in priority
 
 ## How to use
 
