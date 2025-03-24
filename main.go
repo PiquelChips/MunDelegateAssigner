@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
@@ -19,23 +20,28 @@ type Delegate_weight struct {
 	weight   int
 }
 
+const (
+	delegates_file   = "delegates.csv"
+	config_file      = "config.ini"
+	history_file     = "history.csv"
+	assignments_file = "assignments.csv"
+)
+
 func main() {
 
-	delegates_file, config_file, history_file, assignments_file := get_filenames()
-
 	// initialize vars
-	get_countries(config_file)
-	delegates := get_delegates(delegates_file)
+	get_countries()
+	delegates := get_delegates()
 	all_countries := get_all_countries()
-	important_countries := shuffle_slice(get_important_countries())
-	previous_assignments, min_assignments := get_previous_assignments(history_file)
+	important_countries := shuffle_slice(append(countries["P5"], countries["High"]...))
+	previous_assignments, min_assignments := get_previous_assignments()
 	available_countries := shuffle_slice(all_countries)
 
-	remove_chairs(&delegates, delegates_file)
+	remove_chairs(&delegates)
 	var assignments = make(map[string]string, len(delegates))
 
 	if previous_assignments != nil {
-		handle_weighted_delegate_assignments(&delegates, &previous_assignments, config_file, min_assignments, &important_countries, &available_countries, &assignments)
+		handle_weighted_delegate_assignments(&delegates, &previous_assignments, min_assignments, &important_countries, &available_countries, &assignments)
 	}
 
 	if len(important_countries) > 0 {
@@ -63,17 +69,8 @@ func main() {
 		assignments[delegate] = available_countries[i]
 	}
 
-	write_assignments(assignments_file, assignments)
-	write_history(history_file, assignments, previous_assignments)
-}
-
-func in_slice(a string, slice []string) bool {
-	for _, element := range slice {
-		if element == a {
-			return true
-		}
-	}
-	return false
+	write_assignments(assignments)
+	write_history(assignments, previous_assignments)
 }
 
 func slice_element_index(a string, slice []string) int {
@@ -95,8 +92,8 @@ func shuffle_slice(src []string) []string {
 	return dest
 }
 
-func get_delegates(filename string) []string {
-	file, err := os.Open(filename)
+func get_delegates() []string {
+	file, err := os.Open(delegates_file)
 	if err != nil {
 		panic(err)
 	}
@@ -112,8 +109,8 @@ func get_delegates(filename string) []string {
 	return delegates
 }
 
-func write_assignments(filename string, assignments map[string]string) {
-	file, err := os.Create(filename)
+func write_assignments(assignments map[string]string) {
+	file, err := os.Create(assignments_file)
 	if err != nil {
 		panic(err)
 	}
@@ -127,7 +124,7 @@ func write_assignments(filename string, assignments map[string]string) {
 	writer.Flush()
 }
 
-func write_history(filename string, assignments map[string]string, previous_assignments map[string][]string) {
+func write_history(assignments map[string]string, previous_assignments map[string][]string) {
 
 	var history = make(map[string][]string)
 	if previous_assignments != nil {
@@ -154,7 +151,7 @@ func write_history(filename string, assignments map[string]string, previous_assi
 		lines = append(lines, line)
 	}
 
-	file, error := os.Create(filename)
+	file, error := os.Create(history_file)
 	if error != nil {
 		panic(error)
 	}
@@ -168,8 +165,8 @@ func write_history(filename string, assignments map[string]string, previous_assi
 	writer.Flush()
 }
 
-func get_countries(filename string) {
-	config_data, err := ini.Load(filename)
+func get_countries() {
+	config_data, err := ini.Load(config_file)
 	if err != nil {
 		panic(err)
 	}
@@ -192,12 +189,8 @@ func get_all_countries() []string {
 	return all_countries
 }
 
-func get_important_countries() []string {
-	return append(countries["P5"], countries["High"]...)
-}
-
-func get_previous_assignments(filename string) (map[string][]string, int) {
-	file, err := os.Open(filename)
+func get_previous_assignments() (map[string][]string, int) {
+	file, err := os.Open(assignments_file)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, 0
 	} else if err != nil {
@@ -227,14 +220,14 @@ func get_previous_assignments(filename string) (map[string][]string, int) {
 	return assignments, min_assignments + 2
 }
 
-func get_delegate_weight(previous_assignments []string, filename string, min_assignments int) int {
+func get_delegate_weight(previous_assignments []string, min_assignments int) int {
 	if min_assignments == 0 {
 		return 0
 	}
 
 	delegate_weight := 0
 
-	config, err := ini.Load(filename)
+	config, err := ini.Load(config_file)
 	if err != nil {
 		panic(err)
 	}
@@ -248,25 +241,25 @@ func get_delegate_weight(previous_assignments []string, filename string, min_ass
 			break
 		}
 
-		if in_slice(country, countries["P5"]) {
+		if slices.Contains(countries["P5"], country) {
 			p5_weight, error := section.Key("P5").Int()
 			if error != nil {
 				panic(error)
 			}
 			delegate_weight += p5_weight
-		} else if in_slice(country, countries["Important"]) {
+		} else if slices.Contains(countries["Important"], country) {
 			important_weight, error := section.Key("Important").Int()
 			if error != nil {
 				panic(error)
 			}
 			delegate_weight += important_weight
-		} else if in_slice(country, countries["Medium"]) {
+		} else if slices.Contains(countries["Medium"], country) {
 			medium_weight, error := section.Key("Medium").Int()
 			if error != nil {
 				panic(error)
 			}
 			delegate_weight += medium_weight
-		} else if in_slice(country, countries["Standard"]) {
+		} else if slices.Contains(countries["Standard"], country) {
 			standard_weigt, error := section.Key("Standard").Int()
 			if error != nil {
 				panic(error)
@@ -284,20 +277,12 @@ func get_delegate_weight(previous_assignments []string, filename string, min_ass
 	return delegate_weight
 }
 
-func get_filenames() (string, string, string, string) {
-	delegates_file := "delegates.csv"
-	config_file := "config.ini"
-	history_file := "history.csv"
-	assignments_file := "assignments.csv"
-	return delegates_file, config_file, history_file, assignments_file
-}
-
-func handle_weighted_delegate_assignments(delegates *[]string, previous_assignments *map[string][]string, config_file string, min_assignments int, important_countries *[]string, available_countries *[]string, assignments *map[string]string) {
+func handle_weighted_delegate_assignments(delegates *[]string, previous_assignments *map[string][]string, min_assignments int, important_countries *[]string, available_countries *[]string, assignments *map[string]string) {
 	var delegate_weights = make(map[string]int, len(*delegates))
 
 	// setup weights for delegates
 	for _, delegate := range *delegates {
-		delegate_weights[delegate] = get_delegate_weight((*previous_assignments)[delegate], config_file, min_assignments)
+		delegate_weights[delegate] = get_delegate_weight((*previous_assignments)[delegate], min_assignments)
 	}
 
 	var weighted_delegates []Delegate_weight
@@ -325,13 +310,13 @@ func handle_weighted_delegate_assignments(delegates *[]string, previous_assignme
 	}
 }
 
-func remove_chairs(delegates *[]string, delegates_file string) {
+func remove_chairs(delegates *[]string) {
 	fmt.Printf("Enter the name of the chairs as they are present in the %s file. Make sure they are separated by \",\" (no spaces): ", delegates_file)
 	var chair_string string
 	fmt.Scanf("%s", &chair_string)
-    if chair_string == "" {
-        return
-    }
+	if chair_string == "" {
+		return
+	}
 	chairs := strings.Split(chair_string, ",")
 	for _, chair := range chairs {
 		i := slice_element_index(chair, *delegates)
