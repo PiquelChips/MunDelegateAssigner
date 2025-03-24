@@ -116,11 +116,11 @@ func write_assignments(assignments map[string]string) {
 	}
 	defer file.Close()
 
+	delegates := get_delegates()
 	writer := bufio.NewWriter(file)
-	for delegate, assignment := range assignments {
-		fmt.Fprintf(writer, "%s,%s\n", delegate, assignment)
+	for _, delegate := range delegates {
+		fmt.Fprintf(writer, "%s,%s\n", delegate, assignments[delegate])
 	}
-
 	writer.Flush()
 }
 
