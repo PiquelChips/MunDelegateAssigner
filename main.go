@@ -45,15 +45,13 @@ func main() {
 		panic(err)
 	}
 
-	if chair_string == "" {
-		return
-	}
-
-	chairs := strings.Split(chair_string, ",")
-	for _, chair := range chairs {
-		i := slices.Index(delegates, chair)
-		delegates[i] = delegates[len(delegates)-1]
-		delegates = delegates[:len(delegates)-1]
+	if chair_string != "" {
+		chairs := strings.Split(chair_string, ",")
+		for _, chair := range chairs {
+			i := slices.Index(delegates, chair)
+			delegates[i] = delegates[len(delegates)-1]
+			delegates = delegates[:len(delegates)-1]
+		}
 	}
 
 	var assignments = make(map[string]string, len(delegates))
