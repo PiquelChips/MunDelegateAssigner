@@ -37,7 +37,25 @@ func main() {
 	previous_assignments, min_assignments := get_previous_assignments()
 	available_countries := shuffle_slice(all_countries)
 
-	remove_chairs(&delegates)
+	fmt.Printf("Enter the name of the chairs as they are present in the %s file. Make sure they are separated by \",\": ", delegates_file)
+	in_buff := bufio.NewReader(os.Stdin)
+	chair_string, err := in_buff.ReadString('\n')
+	chair_string = strings.Trim(chair_string, "\n")
+	if err != nil {
+		panic(err)
+	}
+
+	if chair_string == "" {
+		return
+	}
+
+	chairs := strings.Split(chair_string, ",")
+	for _, chair := range chairs {
+		i := slices.Index(delegates, chair)
+		delegates[i] = delegates[len(delegates)-1]
+		delegates = delegates[:len(delegates)-1]
+	}
+
 	var assignments = make(map[string]string, len(delegates))
 
 	if previous_assignments != nil {
@@ -46,7 +64,7 @@ func main() {
 
 	if len(important_countries) > 0 {
 		for _, country := range important_countries {
-			i := slice_element_index(country, available_countries)
+			i := slices.Index(available_countries, country)
 			if i == -1 {
 				continue
 			}
@@ -71,15 +89,6 @@ func main() {
 
 	write_assignments(assignments)
 	write_history(assignments, previous_assignments)
-}
-
-func slice_element_index(a string, slice []string) int {
-	for i, element := range slice {
-		if element == a {
-			return i
-		}
-	}
-	return -1
 }
 
 func shuffle_slice(src []string) []string {
@@ -296,7 +305,7 @@ func handle_weighted_delegate_assignments(delegates *[]string, previous_assignme
 
 	// assign the weighted delegates
 	for i := range len(*important_countries) {
-		j := slice_element_index((*important_countries)[0], *available_countries)
+		j := slices.Index(*available_countries, (*important_countries)[0])
 		if i == -1 {
 			continue
 		}
@@ -307,20 +316,5 @@ func handle_weighted_delegate_assignments(delegates *[]string, previous_assignme
 		(*delegates) = (*delegates)[1:]
 		(*available_countries)[j] = (*available_countries)[len(*available_countries)-1]
 		(*available_countries) = (*available_countries)[:len(*available_countries)-1]
-	}
-}
-
-func remove_chairs(delegates *[]string) {
-	fmt.Printf("Enter the name of the chairs as they are present in the %s file. Make sure they are separated by \",\" (no spaces): ", delegates_file)
-	var chair_string string
-	fmt.Scanf("%s", &chair_string)
-	if chair_string == "" {
-		return
-	}
-	chairs := strings.Split(chair_string, ",")
-	for _, chair := range chairs {
-		i := slice_element_index(chair, *delegates)
-		(*delegates)[i] = (*delegates)[len(*delegates)-1]
-		(*delegates) = (*delegates)[:len(*delegates)-1]
 	}
 }
